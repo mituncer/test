@@ -302,6 +302,8 @@
   .list-tabs { display: flex; gap: 6px; padding: 10px 16px; flex-shrink: 0; overflow-x: auto; }
   .list-tab { flex-shrink: 0; padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; transition: all .2s; }
   .list-tab.active { border-color: var(--gold); color: var(--gold); background: var(--gold-soft); }
+  .list-sort-btn { padding: 5px 12px; border-radius: 20px; border: 1px solid var(--border); background: var(--surface2); color: var(--text-muted); font-family: 'Outfit', sans-serif; font-size: 11px; cursor: pointer; transition: all .2s; margin-right: 4px; }
+  .list-sort-btn:hover { border-color: var(--gold); color: var(--gold); }
   .list-start-btn { padding: 5px 14px; border-radius: 20px; border: 1px solid rgba(90,191,138,.4); background: rgba(90,191,138,.1); color: var(--green); font-family: 'Outfit', sans-serif; font-size: 12px; cursor: pointer; transition: all .2s; margin-right: 6px; }
   .list-start-btn:hover { background: rgba(90,191,138,.2); }
   .list-add-row { display: flex; gap: 6px; padding: 8px 16px; flex-shrink: 0; }
@@ -328,6 +330,7 @@
   <div class="splash-badge">PK</div>
   <div class="splash-title">PolonceKart</div>
   <div class="splash-sub">Polish · Turkish Flashcards</div>
+  <div style="font-size:10px;color:var(--text-dim);letter-spacing:2px;margin-top:-40px;margin-bottom:40px;">VER 2.0</div>
   <div class="splash-divider"></div>
   <div class="splash-copy">
     This application was developed by<br>
@@ -364,32 +367,50 @@
     <div class="help-body">
 
       <div class="help-section">
-        <div class="help-section-title" style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--text-muted);font-weight:400;margin-bottom:16px">PolonceKart, Lehçe-Türkçe kelime öğrenmek için hazırlanmış bir flash kart uygulamasıdır. Kartları çevirerek kelimeleri tekrarla, bilmediklerini işaretle, seçili setinle çalış.</div>
+        <div class="help-section-title" style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--text-muted);font-weight:400;margin-bottom:16px">PolonceKart, Lehçe-Türkçe kelime öğrenmek için hazırlanmış bir flash kart uygulamasıdır. Kartları çevirerek kelimeleri tekrarla, bilmediklerini işaretle, setlerinle çalış.</div>
       </div>
 
       <div class="help-section">
-        <div class="help-section-title">🃏 Ana Kart Ekranı</div>
-        <div class="help-item"><span class="help-key">→ kaydır / tıkla</span> Kartı çevir, çevirisini gör</div>
-        <div class="help-item"><span class="help-key">↓ kaydır</span> Sonraki kart</div>
-        <div class="help-item"><span class="help-key">↑ kaydır</span> Önceki kart</div>
-        <div class="help-item"><span class="help-key">✓ Doğru</span> Biliyorum, doğru işaretle</div>
-        <div class="help-item"><span class="help-key">✗ Yanlış</span> Bilmiyorum, yanlış işaretle</div>
-        <div class="help-item"><span class="help-key">📌 Çalışma Setine Ekle</span> Seçili kelimeler listesine ekle</div>
+        <div class="help-section-title">📚 Kelime Setleri</div>
+        <div class="help-item"><span class="help-key">📘 Günlük Cümleler</span> Temel ifadeler ve günlük konuşmalar</div>
+        <div class="help-item"><span class="help-key">🎓 B1 Kelimeler</span> Orta seviye kelime listesi</div>
+        <div class="help-item"><span class="help-key">📌 Çalışma Seti</span> Bilmediğin, işaretlediğin kelimeler</div>
+        <div class="help-item"><span class="help-key">PL→TR / TR→PL</span> Yön tuşuyla soru yönünü değiştir</div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">🃏 Kart Ekranı</div>
+        <div class="help-item"><span class="help-key">→ kaydır / tıkla</span> Kartı çevir, çeviriyi gör</div>
+        <div class="help-item"><span class="help-key">↓ / ↑ kaydır</span> Sonraki / önceki kart</div>
+        <div class="help-item"><span class="help-key">✅ Doğru</span> Biliyorum — sonraki karta geç</div>
+        <div class="help-item"><span class="help-key">❌ Yanlış</span> Bilmiyorum — sonraki karta geç</div>
+        <div class="help-item"><span class="help-key">📌 Çalışma Setine Ekle</span> Kelimeyi çalışma setine ekle</div>
+        <div class="help-item"><span class="help-key">☆ Günlük</span> Kelimeyi günlük sete ekle / çıkar</div>
         <div class="help-item"><span class="help-key">💡 Örnek cümle</span> Kelimeyi cümle içinde gör</div>
       </div>
 
       <div class="help-section">
-        <div class="help-section-title">📌 Seçili Kelimeler Seti</div>
-        <div class="help-item">📌 ile işaretlediğin kelimeler burada toplanır</div>
-        <div class="help-item">Ders bitince sonuç ekranından sete ulaşabilirsin</div>
-        <div class="help-item"><span class="help-key">🎓 Öğrendim</span> Kelimeyi setten kalıcı olarak çıkarır</div>
-        <div class="help-item">Seçili kelimeler telefonda saklanır — uygulama kapanıp açılsa bile kaybolmaz</div>
+        <div class="help-section-title">☰ Liste Görünümü</div>
+        <div class="help-item">Tüm kelimeleri PL→TR olarak listele</div>
+        <div class="help-item"><span class="help-key">📌 Çalışma</span> Çalışma setindeki kelimeler — 🗑 ile çıkar</div>
+        <div class="help-item"><span class="help-key">⭐ Günlük</span> Günlük set — ⭐ tıklayarak çıkar</div>
+        <div class="help-item"><span class="help-key">✏️ Kelime Ekle</span> Kendi kelimenizi ekle — otomatik çalışma setine girer</div>
+        <div class="help-item"><span class="help-key">▶ Başlat</span> Seçili seti kart modunda başlat</div>
+        <div class="help-item"><span class="help-key">A→Z</span> Listeyi alfabetik / ters / rastgele sırala</div>
       </div>
 
       <div class="help-section">
-        <div class="help-section-title">🔄 Yön Modu</div>
-        <div class="help-item"><span class="help-key">PL → TR</span> Lehçe gör, Türkçeyi bil</div>
-        <div class="help-item"><span class="help-key">TR → PL</span> Türkçe gör, Lehçeyi bil</div>
+        <div class="help-section-title">⭐ Günlük Set</div>
+        <div class="help-item">Çalışma setinden günlük odaklanmak istediğin kelimeleri seç</div>
+        <div class="help-item">Kart ekranında ☆ butonu ile ekle, listeden ⭐ ile çıkar</div>
+        <div class="help-item">Listeden ▶ Başlat ile sadece günlük setini çalış</div>
+      </div>
+
+      <div class="help-section">
+        <div class="help-section-title">📌 Çalışma Seti</div>
+        <div class="help-item">📌 ile işaretlediğin kelimeler burada toplanır</div>
+        <div class="help-item"><span class="help-key">🎓 Öğrendim</span> Kelimeyi setten kalıcı olarak çıkarır</div>
+        <div class="help-item">Tüm veriler telefonda saklanır — kapanıp açılsa bile kaybolmaz</div>
       </div>
 
       <div class="help-section">
@@ -404,12 +425,13 @@
       </div>
 
       <div class="help-section">
-        <div class="help-section-title">⌨️ Klavye Kısayolları (bilgisayar)</div>
+        <div class="help-section-title">⌨️ Klavye Kısayolları</div>
         <div class="help-item"><span class="help-key">→ / Boşluk</span> Kartı çevir</div>
-        <div class="help-item"><span class="help-key">↓</span> Sonraki kart</div>
-        <div class="help-item"><span class="help-key">↑</span> Önceki kart</div>
+        <div class="help-item"><span class="help-key">↓ / ↑</span> Sonraki / önceki kart</div>
         <div class="help-item"><span class="help-key">Enter</span> Doğru</div>
         <div class="help-item"><span class="help-key">Backspace</span> Yanlış</div>
+        <div class="help-item"><span class="help-key">Tab</span> Çalışma setine ekle</div>
+        <div class="help-item"><span class="help-key">Esc</span> Kapat / geri</div>
       </div>
 
     </div>
@@ -550,6 +572,7 @@
   <div class="list-modal">
     <div class="list-modal-header">
       <div class="list-modal-title" id="list-modal-title">☰ Kelime Listesi</div>
+      <button class="list-sort-btn" id="list-sort-btn" onclick="cycleSortOrder()">A→Z</button>
       <button class="list-start-btn" id="list-start-btn" style="display:none" onclick="startFromList()">▶ Başlat</button>
       <button class="mini-close-btn" onclick="closeList()">✕ Kapat</button>
     </div>
@@ -1040,9 +1063,18 @@ function updateStarBtn(){
 // ── LIST OVERLAY ──
 let currentListTab = 'all';
 function openList(){
+  // Aktif seti belirle ve o sekmeyi aç
+  const activeSel = localStorage.getItem('polonceKart_set') || 'gunluk';
+  if(activeSel === 'calisma') currentListTab = 'saved';
+  else if(activeSel === 'star') currentListTab = 'star';
+  else currentListTab = 'all';
+  document.querySelectorAll('.list-tab').forEach(t => t.classList.remove('active'));
+  const activeTab = document.getElementById('tab-'+currentListTab);
+  if(activeTab) activeTab.classList.add('active');
   document.getElementById('list-overlay').classList.add('show');
   const startBtn = document.getElementById('list-start-btn');
   if(startBtn) startBtn.style.display = (currentListTab==='saved'||currentListTab==='star') ? 'block' : 'none';
+  document.getElementById('list-add-row').style.display = 'none';
   renderList(currentListTab);
 }
 function closeList(){
@@ -1079,6 +1111,24 @@ function switchListTab(tab){
   if(startBtn) startBtn.style.display = (tab==='saved'||tab==='star') ? 'block' : 'none';
   renderList(tab);
 }
+let currentSortOrder = 'none'; // none, az, za
+
+function cycleSortOrder(){
+  const orders = ['none', 'az', 'za'];
+  const labels = {'none': 'A→Z', 'az': 'Z→A', 'za': '🔀'};
+  const next = {'none': 'az', 'az': 'za', 'za': 'none'};
+  currentSortOrder = next[currentSortOrder];
+  const btn = document.getElementById('list-sort-btn');
+  if(btn) btn.textContent = labels[currentSortOrder];
+  renderList(currentListTab);
+}
+
+function sortItems(items){
+  if(currentSortOrder === 'az') return [...items].sort((a,b) => a.pl.localeCompare(b.pl));
+  if(currentSortOrder === 'za') return [...items].sort((a,b) => b.pl.localeCompare(a.pl));
+  return items;
+}
+
 function renderList(tab){
   const body = document.getElementById('list-body');
   const title = document.getElementById('list-modal-title');
@@ -1104,6 +1154,8 @@ function renderList(tab){
     // Show custom words added so far
     items = customWords;
   }
+
+  items = sortItems(items);
 
   if(!items.length){
     body.innerHTML = '<div class="list-empty">Kelime yok</div>';
