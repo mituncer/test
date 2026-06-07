@@ -1,0 +1,750 @@
+<!DOCTYPE html><html lang="tr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"><title>Lehçe Fiil Bulma</title><style>html,body{margin:0;padding:0;background:#0f0f13;} * { box-sizing: border-box; margin: 0; padding: 0; } :root { --bg: #0f0f13; --surface: #18181f; --card: #1e1e28; --border: #2e2e3e; --accent: #c8a96e; --accent2: #5b8dee; --niedo: #5b8dee; --doko: #5ec27f; --text: #e8e4d9; --muted: #7a7890; --wrong: #e05c5c; --correct: #5ec27f; } body { background: var(--bg); color: var(--text); font-family: 'IBM Plex Mono', monospace; } .app { min-height: 100vh; display: flex; flex-direction: column; align-items: center; padding: 24px 16px 48px; } .header { text-align: center; margin-bottom: 32px; } .header h1 { font-family: 'Playfair Display', serif; font-size: clamp(1.6rem, 5vw, 2.4rem); color: var(--accent); letter-spacing: 0.02em; line-height: 1.2; } .header p { margin-top: 6px; font-size: 0.78rem; color: var(--muted); letter-spacing: 0.05em; } .score-bar { display: flex; gap: 20px; margin-bottom: 28px; font-size: 0.8rem; color: var(--muted); letter-spacing: 0.04em; } .score-bar span strong { color: var(--text); font-size: 1.05rem; } .progress-wrap { width: min(520px, 100%); height: 3px; background: var(--border); border-radius: 2px; margin-bottom: 28px; overflow: hidden; } .progress-fill { height: 100%; background: var(--accent); border-radius: 2px; transition: width 0.4s ease; } .card { width: min(520px, 100%); background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px 28px 24px; position: relative; overflow: hidden; } .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--niedo), var(--doko)); } .verb-pair { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; } .verb-chip { padding: 5px 14px; border-radius: 20px; font-size: 0.88rem; font-weight: 500; letter-spacing: 0.03em; } .niedo-chip { background: rgba(91,141,238,0.15); color: var(--niedo); border: 1px solid rgba(91,141,238,0.3); } .doko-chip { background: rgba(94,194,127,0.12); color: var(--doko); border: 1px solid rgba(94,194,127,0.25); } .arrow { color: var(--muted); font-size: 0.9rem; } .meaning { font-size: 0.75rem; color: var(--muted); margin-left: auto; font-style: italic; } .question-meta { font-size: 0.75rem; color: var(--muted); margin-bottom: 20px; line-height: 1.6; letter-spacing: 0.03em; } .question-meta .tense-label { color: var(--accent); font-weight: 500; } .question-meta .person-label { color: var(--text); font-weight: 500; } .prompt { font-family: 'Playfair Display', serif; font-size: clamp(1.1rem, 4vw, 1.4rem); color: var(--text); margin-bottom: 28px; line-height: 1.5; } .prompt .blank { display: inline-block; min-width: 120px; border-bottom: 2px solid var(--accent); color: var(--accent); font-style: italic; padding: 0 4px; text-align: center; } .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; } .opt-btn { background: var(--surface); border: 1.5px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'IBM Plex Mono', monospace; font-size: 0.88rem; padding: 14px 12px; cursor: pointer; transition: all 0.18s ease; text-align: left; letter-spacing: 0.02em; position: relative; overflow: hidden; } .opt-btn .opt-letter { display: inline-block; width: 20px; height: 20px; border-radius: 4px; background: var(--border); color: var(--muted); font-size: 0.7rem; text-align: center; line-height: 20px; margin-right: 8px; transition: all 0.18s; } .opt-btn:not(:disabled):hover { border-color: var(--accent); background: rgba(200, 169, 110, 0.07); } .opt-btn:not(:disabled):hover .opt-letter { background: var(--accent); color: #000; } .opt-btn.correct { border-color: var(--correct); background: rgba(94,194,127,0.12); color: var(--correct); animation: pulse-green 0.4s ease; } .opt-btn.correct .opt-letter { background: var(--correct); color: #000; } .opt-btn.wrong { border-color: var(--wrong); background: rgba(224,92,92,0.1); color: var(--wrong); animation: shake 0.35s ease; } .opt-btn.wrong .opt-letter { background: var(--wrong); color: #fff; } .opt-btn.reveal-correct { border-color: var(--correct); background: rgba(94,194,127,0.08); color: var(--correct); } .opt-btn:disabled { cursor: default; } .typo-tag { display: block; font-size: 0.62rem; color: #c8a96e; opacity: 0.75; margin-top: 4px; letter-spacing: 0.04em; } @keyframes pulse-green { 0% { transform: scale(1); } 50% { transform: scale(1.03); } 100% { transform: scale(1); } } @keyframes shake { 0% { transform: translateX(0); } 25% { transform: translateX(-6px); } 50% { transform: translateX(6px); } 75% { transform: translateX(-4px); } 100% { transform: translateX(0); } } .feedback-row { min-height: 32px; display: flex; align-items: center; gap: 8px; font-size: 0.8rem; margin-bottom: 4px; } .feedback-icon { font-size: 1.1rem; } .feedback-text.correct-fb { color: var(--correct); } .feedback-text.wrong-fb { color: var(--wrong); } .next-btn { width: 100%; margin-top: 16px; padding: 14px; border-radius: 10px; background: var(--accent); color: #0f0f13; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.18s, transform 0.18s; } .next-btn:hover { opacity: 0.88; transform: translateY(-1px); } .next-btn:active { transform: translateY(0); } .result-card { width: min(520px, 100%); background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 36px 28px; text-align: center; } .result-emoji { font-size: 3rem; margin-bottom: 12px; } .result-title { font-family: 'Playfair Display', serif; font-size: 1.7rem; color: var(--accent); margin-bottom: 8px; } .result-score { font-size: 2.4rem; font-weight: 600; color: var(--text); margin: 16px 0 4px; } .result-pct { font-size: 0.85rem; color: var(--muted); margin-bottom: 24px; } .restart-btn { padding: 14px 36px; border-radius: 10px; background: var(--accent); color: #0f0f13; font-family: 'IBM Plex Mono', monospace; font-size: 0.9rem; font-weight: 600; border: none; cursor: pointer; letter-spacing: 0.05em; transition: opacity 0.18s; } .restart-btn:hover { opacity: 0.88; } .q-counter { font-size: 0.72rem; color: var(--muted); text-align: right; margin-bottom: 14px; letter-spacing: 0.06em; } #quiz-screen{display:none;} #result-screen{display:none;} #settings-btn{position:fixed;top:14px;right:14px;width:36px;height:36px;border-radius:50%;background:#1e1e28;border:1px solid #3a3a52;color:#c8a96e;font-size:18px;cursor:pointer;z-index:100;display:flex;align-items:center;justify-content:center;} #settings-panel{display:none;position:fixed;top:56px;right:14px;background:#1e1e28;border:1px solid #3a3a52;border-radius:12px;padding:16px;z-index:100;min-width:260px;box-shadow:0 4px 24px #00000088;} #settings-panel.open{display:block;} .settings-title{color:#c8a96e;font-family:Georgia,serif;font-size:1rem;margin-bottom:12px;font-weight:600;} .settings-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #2e2e3e;cursor:pointer;} .settings-row:last-child{border-bottom:none;} .settings-row input[type=checkbox]{width:18px;height:18px;accent-color:#c8a96e;cursor:pointer;flex-shrink:0;} .settings-row label{color:#e8e4d9;font-size:0.82rem;cursor:pointer;line-height:1.4;} .settings-row label span{display:block;color:#7a7890;font-size:0.72rem;margin-top:2px;} .settings-save{width:100%;margin-top:12px;padding:10px;background:#c8a96e;color:#0f0f13;border:none;border-radius:8px;font-family:monospace;font-weight:600;font-size:0.85rem;cursor:pointer;}</style></head><body><!-- QUIZ SCREEN --><div id="quiz-screen" class="app"><div class="header"><h1>Lehçe Fiil Bulma</h1><p>Çekim tablosu alıştırması · 10 soru</p><div id="star-row"></div></div><div class="score-bar"><span>Soru <strong id="q-num">1</strong>/10</span><span>Do&#287;ru <strong id="q-score">0</strong></span><span id="q-pct-wrap" style="display:none">%<strong id="q-pct-val">0</strong></span></div><div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div><div class="card"><div class="verb-pair"><span class="verb-chip niedo-chip" id="v-niedo"></span><span class="arrow">&#8594;</span><span class="verb-chip doko-chip" id="v-doko"></span><span class="meaning" id="v-anlam"></span></div><div class="question-meta">
+      Zaman: <span class="tense-label" id="q-tense"></span><br>
+      Ki&#351;i: <span class="person-label" id="q-person"></span></div><div class="prompt" id="q-prompt"></div><div class="options" id="q-options"></div><div class="feedback-row" id="feedback-row" style="display:none"></div><button class="next-btn" id="next-btn" style="display:none">Sonraki Soru &#8594;</button></div></div><!-- RESULT SCREEN --><div id="result-screen" class="app"><div class="header"><h1>Lehçe Fiil Bulma</h1><p>Çekim tablosu alıştırması</p><div id="history-stars"></div></div><div class="result-card"><div id="result-emoji" class="result-emoji"></div><div id="result-title" class="result-title"></div><div id="result-score" class="result-score"></div><div id="result-pct" class="result-pct"></div><button id="continue-btn" class="restart-btn">Devam &#8594;</button></div></div><!-- SETTINGS --><button id="settings-btn" title="Ayarlar">&#9881;</button><div id="settings-panel"><div class="settings-title">Zaman Seçimi</div><div class="settings-row" onclick="toggleCheck('chk-tr')"><input type="checkbox" id="chk-tr" checked><label for="chk-tr">Teraźniejszy<span>Şimdiki Zaman</span></label></div><div class="settings-row" onclick="toggleCheck('chk-niedo-m')"><input type="checkbox" id="chk-niedo-m" checked><label for="chk-niedo-m">Przeszły Niedokonany<span>Geçmiş Zaman (niedo.)</span></label></div><div class="settings-row" onclick="toggleCheck('chk-doko-m')"><input type="checkbox" id="chk-doko-m" checked><label for="chk-doko-m">Przeszły Dokonany<span>Geçmiş Zaman (doko.)</span></label></div><div class="settings-row" onclick="toggleCheck('chk-niedo-f')"><input type="checkbox" id="chk-niedo-f" checked><label for="chk-niedo-f">Przyszły Niedokonany<span>Gelecek Zaman (niedo.)</span></label></div><div class="settings-row" onclick="toggleCheck('chk-doko-f')"><input type="checkbox" id="chk-doko-f" checked><label for="chk-doko-f">Przyszły Dokonany<span>Gelecek Zaman (doko.)</span></label></div><button class="settings-save" onclick="saveSettings()">Kaydet ve Yenile</button></div><script>var VERBS=[
+{
+niedo: "być",doko: "—",anlam: "olmak",
+forms: {
+tr: { ja:"jestem",ty:"jesteś",on:"jest",my:"jesteśmy",wy:"jesteście",oni:"są" },
+pnm: { jm:"byłem",tm:"byłeś",on:"był",mm:"byliśmy",wm:"byliście",oni:"byli" },
+pnf: { jf:"byłam",tf:"byłaś",ona:"była",mf:"byłyśmy",wf:"byłyście",one:"były" },
+}
+},
+{
+niedo: "musieć",doko: "—",anlam: "zorunda olmak",
+forms: {
+tr: { ja:"muszę",ty:"musisz",on:"musi",my:"musimy",wy:"musicie",oni:"muszą" },
+pnm: { jm:"musiałem",tm:"musiałeś",on:"musiał",mm:"musieliśmy",wm:"musieliście",oni:"musieli" },
+pnf: { jf:"musiałam",tf:"musiałaś",ona:"musiała",mf:"musiałyśmy",wf:"musiałyście",one:"musiały" },
+}
+},
+{
+niedo: "mieć",doko: "—",anlam: "sahip olmak",
+forms: {
+tr: { ja:"mam",ty:"masz",on:"ma",my:"mamy",wy:"macie",oni:"mają" },
+pnm: { jm:"miałem",tm:"miałeś",on:"miał",mm:"mieliśmy",wm:"mieliście",oni:"mieli" },
+pnf: { jf:"miałam",tf:"miałaś",ona:"miała",mf:"miałyśmy",wf:"miałyście",one:"miały" },
+}
+},
+{
+niedo: "móc",doko: "—",anlam: "yapabilmek",
+forms: {
+tr: { ja:"mogę",ty:"możesz",on:"może",my:"możemy",wy:"możecie",oni:"mogą" },
+pnm: { jm:"mogłem",tm:"mogłeś",on:"mógł",mm:"mogliśmy",wm:"mogliście",oni:"mogli" },
+pnf: { jf:"mogłam",tf:"mogłaś",ona:"mogła",mf:"mogłyśmy",wf:"mogłyście",one:"mogły" },
+}
+},
+{
+niedo: "chcieć",doko: "—",anlam: "istemek",
+forms: {
+tr: { ja:"chcę",ty:"chcesz",on:"chce",my:"chcemy",wy:"chcecie",oni:"chcą" },
+pnm: { jm:"chciałem",tm:"chciałeś",on:"chciał",mm:"chcieliśmy",wm:"chcieliście",oni:"chcieli" },
+pnf: { jf:"chciałam",tf:"chciałaś",ona:"chciała",mf:"chciałyśmy",wf:"chciałyście",one:"chciały" },
+}
+},
+{
+niedo: "chodzić",doko: "pójść",anlam: "yürümek / gitmek",
+forms: {
+tr: { ja:"chodzę",ty:"chodzisz",on:"chodzi",my:"chodzimy",wy:"chodzicie",oni:"chodzą" },
+pnm: { jm:"chodziłem",tm:"chodziłeś",on:"chodził",mm:"chodziliśmy",wm:"chodziliście",oni:"chodzili" },
+pdm: { jm:"poszedłem",tm:"poszedłeś",on:"poszedł",mm:"poszliśmy",wm:"poszliście",oni:"poszli" },
+gd: { ja:"pójdę",ty:"pójdziesz",on:"pójdzie",my:"pójdziemy",wy:"pójdziecie",oni:"pójdą" },
+}
+},
+{
+niedo: "jeździć",doko: "pojechać",anlam: "gitmek (araçla)",
+forms: {
+tr: { ja:"jeżdżę",ty:"jeździsz",on:"jeździ",my:"jeździmy",wy:"jeździcie",oni:"jeżdżą" },
+pnm: { jm:"jeździłem",tm:"jeździłeś",on:"jeździł",mm:"jeździliśmy",wm:"jeździliście",oni:"jeździli" },
+pdm: { jm:"pojechałem",tm:"pojechałeś",on:"pojechał",mm:"pojechaliśmy",wm:"pojechaliście",oni:"pojechali" },
+gd: { ja:"pojadę",ty:"pojedziesz",on:"pojedzie",my:"pojedziemy",wy:"pojedziecie",oni:"pojadą" },
+}
+},
+{
+niedo: "mieszkać",doko: "zamieszkać",anlam: "oturmak / yaşamak",
+forms: {
+tr: { ja:"mieszkam",ty:"mieszkasz",on:"mieszka",my:"mieszkamy",wy:"mieszkacie",oni:"mieszkają" },
+pnm: { jm:"mieszkałem",tm:"mieszkałeś",on:"mieszkał",mm:"mieszkaliśmy",wm:"mieszkaliście",oni:"mieszkali" },
+pdm: { jm:"zamieszkałem",tm:"zamieszkałeś",on:"zamieszkał",mm:"zamieszkaliśmy",wm:"zamieszkaliście",oni:"zamieszkali" },
+gd: { ja:"zamieszkam",ty:"zamieszkasz",on:"zamieszka",my:"zamieszkamy",wy:"zamieszkają",oni:"zamieszkają" },
+}
+},
+{
+niedo: "pracować",doko: "przepracować",anlam: "çalışmak",
+forms: {
+tr: { ja:"pracuję",ty:"pracujesz",on:"pracuje",my:"pracujemy",wy:"pracujecie",oni:"pracują" },
+pnm: { jm:"pracowałem",tm:"pracowałeś",on:"pracował",mm:"pracowaliśmy",wm:"pracowaliście",oni:"pracowali" },
+pdm: { jm:"przepracowałem",tm:"przepracowałeś",on:"przepracował",mm:"przepracowaliśmy",wm:"przepracowaliście",oni:"przepracowali" },
+gd: { ja:"przepracuję",ty:"przepracujesz",on:"przepracuje",my:"przepracujemy",wy:"przepracujecie",oni:"przepracują" },
+}
+},
+{
+niedo: "podróżować",doko: "—",anlam: "seyahat etmek",
+forms: {
+tr: { ja:"podróżuję",ty:"podróżujesz",on:"podróżuje",my:"podróżujemy",wy:"podróżujecie",oni:"podróżują" },
+pnm: { jm:"podróżowałem",tm:"podróżowałeś",on:"podróżował",mm:"podróżowaliśmy",wm:"podróżowaliście",oni:"podróżowali" },
+}
+},
+{
+niedo: "gotować",doko: "ugotować",anlam: "pişirmek",
+forms: {
+tr: { ja:"gotuję",ty:"gotujesz",on:"gotuje",my:"gotujemy",wy:"gotujecie",oni:"gotują" },
+pnm: { jm:"gotowałem",tm:"gotowałeś",on:"gotował",mm:"gotowaliśmy",wm:"gotowaliście",oni:"gotowali" },
+pdm: { jm:"ugotowałem",tm:"ugotowałeś",on:"ugotował",mm:"ugotowaliśmy",wm:"ugotowaliście",oni:"ugotowali" },
+gd: { ja:"ugotuję",ty:"ugotujesz",on:"ugotuje",my:"ugotujemy",wy:"ugotujecie",oni:"ugotują" },
+}
+},
+{
+niedo: "kupować",doko: "kupić",anlam: "satın almak",
+forms: {
+tr: { ja:"kupuję",ty:"kupujesz",on:"kupuje",my:"kupujemy",wy:"kupujecie",oni:"kupują" },
+pnm: { jm:"kupowałem",tm:"kupowałeś",on:"kupował",mm:"kupowaliśmy",wm:"kupowaliście",oni:"kupowali" },
+pdm: { jm:"kupiłem",tm:"kupiłeś",on:"kupił",mm:"kupiliśmy",wm:"kupiliście",oni:"kupili" },
+gd: { ja:"kupię",ty:"kupisz",on:"kupi",my:"kupimy",wy:"kupicie",oni:"kupią" },
+}
+},
+{
+niedo: "używać",doko: "użyć",anlam: "kullanmak",
+forms: {
+tr: { ja:"używam",ty:"używasz",on:"używa",my:"używamy",wy:"używacie",oni:"używają" },
+pnm: { jm:"używałem",tm:"używałeś",on:"używał",mm:"używaliśmy",wm:"używaliście",oni:"używali" },
+pdm: { jm:"użyłem",tm:"użyłeś",on:"użył",mm:"użyliśmy",wm:"użyliście",oni:"użyli" },
+gd: { ja:"użyję",ty:"użyjesz",on:"użyje",my:"użyjemy",wy:"użyjecie",oni:"użyją" },
+}
+},
+{
+niedo: "odkrywać",doko: "odkryć",anlam: "keşfetmek",
+forms: {
+tr: { ja:"odkrywam",ty:"odkrywasz",on:"odkrywa",my:"odkrywamy",wy:"odkrywacie",oni:"odkrywają" },
+pnm: { jm:"odkrywałem",tm:"odkrywałeś",on:"odkrywał",mm:"odkrywaliśmy",wm:"odkrywaliście",oni:"odkrywali" },
+pdm: { jm:"odkryłem",tm:"odkryłeś",on:"odkrył",mm:"odkryliśmy",wm:"odkryliście",oni:"odkryli" },
+gd: { ja:"odkryję",ty:"odkryjesz",on:"odkryje",my:"odkryjemy",wy:"odkryjecie",oni:"odkryją" },
+}
+},
+{
+niedo: "nadawać",doko: "nadać",anlam: "yayınlamak / göndermek",
+forms: {
+tr: { ja:"nadaję",ty:"nadajesz",on:"nadaje",my:"nadajemy",wy:"nadajecie",oni:"nadają" },
+pnm: { jm:"nadawałem",tm:"nadawałeś",on:"nadawał",mm:"nadawaliśmy",wm:"nadawaliście",oni:"nadawali" },
+pdm: { jm:"nadałem",tm:"nadałeś",on:"nadał",mm:"nadaliśmy",wm:"nadaliście",oni:"nadali" },
+gd: { ja:"nadam",ty:"nadasz",on:"nada",my:"nadamy",wy:"nadacie",oni:"nadadzą" },
+}
+},
+{
+niedo: "dawać",doko: "dać",anlam: "vermek",
+forms: {
+tr: { ja:"daję",ty:"dajesz",on:"daje",my:"dajemy",wy:"dajecie",oni:"dają" },
+pnm: { jm:"dawałem",tm:"dawałeś",on:"dawał",mm:"dawaliśmy",wm:"dawaliście",oni:"dawali" },
+pdm: { jm:"dałem",tm:"dałeś",on:"dał",mm:"daliśmy",wm:"daliście",oni:"dali" },
+gd: { ja:"dam",ty:"dasz",on:"da",my:"damy",wy:"dacie",oni:"dadzą" },
+}
+},
+{
+niedo: "zadowalać",doko: "zadowolić",anlam: "memnun etmek",
+forms: {
+tr: { ja:"zadowalam",ty:"zadowalasz",on:"zadowala",my:"zadowalamy",wy:"zadowalacie",oni:"zadowalają" },
+pnm: { jm:"zadowalałem",tm:"zadowalałeś",on:"zadowalał",mm:"zadowalaliśmy",wm:"zadowalaliście",oni:"zadowalali" },
+pdm: { jm:"zadowoliłem",tm:"zadowoliłeś",on:"zadowolił",mm:"zadowoliliśmy",wm:"zadowoliliście",oni:"zadowolili" },
+gd: { ja:"zadowolę",ty:"zadowolisz",on:"zadowoli",my:"zadowolimy",wy:"zadowolicie",oni:"zadowolą" },
+}
+},
+{
+niedo: "przygotowywać",doko: "przygotować",anlam: "hazırlamak",
+forms: {
+tr: { ja:"przygotowuję",ty:"przygotowujesz",on:"przygotowuje",my:"przygotowujemy",wy:"przygotowujecie",oni:"przygotowują" },
+pnm: { jm:"przygotowywałem",tm:"przygotowywałeś",on:"przygotowywał",mm:"przygotowywaliśmy",wm:"przygotowywaliście",oni:"przygotowywali" },
+pdm: { jm:"przygotowałem",tm:"przygotowałeś",on:"przygotował",mm:"przygotowaliśmy",wm:"przygotowaliście",oni:"przygotowali" },
+gd: { ja:"przygotuję",ty:"przygotujesz",on:"przygotuje",my:"przygotujemy",wy:"przygotujecie",oni:"przygotują" },
+}
+},
+{
+niedo: "poznawać",doko: "poznać",anlam: "tanımak / öğrenmek",
+forms: {
+tr: { ja:"poznaję",ty:"poznajesz",on:"poznaje",my:"poznajemy",wy:"poznajacie",oni:"poznają" },
+pnm: { jm:"poznawałem",tm:"poznawałeś",on:"poznawał",mm:"poznawaliśmy",wm:"poznawaliście",oni:"poznawali" },
+pdm: { jm:"poznałem",tm:"poznałeś",on:"poznał",mm:"poznaliśmy",wm:"poznaliście",oni:"poznali" },
+gd: { ja:"poznam",ty:"poznasz",on:"pozna",my:"poznamy",wy:"poznacie",oni:"poznają" },
+}
+},
+{
+niedo: "zostawać",doko: "zostać",anlam: "kalmak / olmak",
+forms: {
+tr: { ja:"zostaję",ty:"zostajesz",on:"zostaje",my:"zostajemy",wy:"zostajecie",oni:"zostają" },
+pnm: { jm:"zostawałem",tm:"zostawałeś",on:"zostawał",mm:"zostawaliśmy",wm:"zostawaliście",oni:"zostawali" },
+pdm: { jm:"zostałem",tm:"zostałeś",on:"został",mm:"zostaliśmy",wm:"zostaliście",oni:"zostali" },
+gd: { ja:"zostanę",ty:"zostaniesz",on:"zostanie",my:"zostaniemy",wy:"zostaniecie",oni:"zostaną" },
+}
+},
+{
+niedo: "zdobywać",doko: "zdobyć",anlam: "kazanmak / fethetmek",
+forms: {
+tr: { ja:"zdobywam",ty:"zdobywasz",on:"zdobywa",my:"zdobywamy",wy:"zdobywacie",oni:"zdobywają" },
+pnm: { jm:"zdobywałem",tm:"zdobywałeś",on:"zdobywał",mm:"zdobywaliśmy",wm:"zdobywaliście",oni:"zdobywali" },
+pdm: { jm:"zdobyłem",tm:"zdobyłeś",on:"zdobył",mm:"zdobyliśmy",wm:"zdobyliście",oni:"zdobyli" },
+gd: { ja:"zdobędę",ty:"zdobędziesz",on:"zdobędzie",my:"zdobędziemy",wy:"zdobędziecie",oni:"zdobędą" },
+}
+},
+{
+niedo: "odpoczywać",doko: "odpocząć",anlam: "dinlenmek",
+forms: {
+tr: { ja:"odpoczywam",ty:"odpoczywasz",on:"odpoczywa",my:"odpoczywamy",wy:"odpoczywаcie",oni:"odpoczywają" },
+pnm: { jm:"odpoczywałem",tm:"odpoczywałeś",on:"odpoczywał",mm:"odpoczywaliśmy",wm:"odpoczywaliście",oni:"odpoczywali" },
+pdm: { jm:"odpocząłem",tm:"odpocząłeś",on:"odpoczął",mm:"odpoczęliśmy",wm:"odpoczęliście",oni:"odpoczęli" },
+gd: { ja:"odpocznę",ty:"odpoczniesz",on:"odpocznie",my:"odpoczniemy",wy:"odpoczniecie",oni:"odpoczną" },
+}
+},
+{
+niedo: "słuchać",doko: "posłuchać",anlam: "dinlemek",
+forms: {
+tr: { ja:"słucham",ty:"słuchasz",on:"słucha",my:"słuchamy",wy:"słuchacie",oni:"słuchają" },
+pnm: { jm:"słuchałem",tm:"słuchałeś",on:"słuchał",mm:"słuchaliśmy",wm:"słuchaliście",oni:"słuchali" },
+pdm: { jm:"posłuchałem",tm:"posłuchałeś",on:"posłuchał",mm:"posłuchaliśmy",wm:"posłuchaliście",oni:"posłuchali" },
+}
+},
+{
+niedo: "czekać",doko: "poczekać",anlam: "beklemek",
+forms: {
+tr: { ja:"czekam",ty:"czekasz",on:"czeka",my:"czekamy",wy:"czekacie",oni:"czekają" },
+pnm: { jm:"czekałem",tm:"czekałeś",on:"czekał",mm:"czekaliśmy",wm:"czekaliście",oni:"czekali" },
+pdm: { jm:"poczekałem",tm:"poczekałeś",on:"poczekał",mm:"poczekaliśmy",wm:"poczekaliście",oni:"poczekali" },
+}
+},
+{
+niedo: "pamiętać",doko: "zapamiętać",anlam: "hatırlamak",
+forms: {
+tr: { ja:"pamiętam",ty:"pamiętasz",on:"pamięta",my:"pamiętamy",wy:"pamiętacie",oni:"pamiętają" },
+pnm: { jm:"pamiętałem",tm:"pamiętałeś",on:"pamiętał",mm:"pamiętaliśmy",wm:"pamiętaliście",oni:"pamiętali" },
+pdm: { jm:"zapamiętałem",tm:"zapamiętałeś",on:"zapamiętał",mm:"zapamiętaliśmy",wm:"zapamiętaliście",oni:"zapamiętali" },
+}
+},
+{
+niedo: "biegać",doko: "pobiegać",anlam: "koşmak",
+forms: {
+tr: { ja:"biegam",ty:"biegasz",on:"biega",my:"biegamy",wy:"biegacie",oni:"biegają" },
+pnm: { jm:"biegałem",tm:"biegałeś",on:"biegał",mm:"biegaliśmy",wm:"biegaliście",oni:"biegali" },
+pdm: { jm:"pobiegałem",tm:"pobiegałeś",on:"pobiegał",mm:"pobiegaliśmy",wm:"pobiegaliście",oni:"pobiegali" },
+}
+},
+{
+niedo: "wracać",doko: "wrócić",anlam: "dönmek",
+forms: {
+tr: { ja:"wracam",ty:"wracasz",on:"wraca",my:"wracamy",wy:"wracacie",oni:"wracają" },
+pnm: { jm:"wracałem",tm:"wracałeś",on:"wracał",mm:"wracaliśmy",wm:"wracaliście",oni:"wracali" },
+pdm: { jm:"wróciłem",tm:"wróciłeś",on:"wrócił",mm:"wróciliśmy",wm:"wróciliście",oni:"wrócili" },
+}
+},
+{
+niedo: "szukać",doko: "poszukać",anlam: "aramak",
+forms: {
+tr: { ja:"szukam",ty:"szukasz",on:"szuka",my:"szukamy",wy:"szukacie",oni:"szukają" },
+pnm: { jm:"szukałem",tm:"szukałeś",on:"szukał",mm:"szukaliśmy",wm:"szukaliście",oni:"szukali" },
+pdm: { jm:"poszukałem",tm:"poszukałeś",on:"poszukał",mm:"poszukaliśmy",wm:"poszukaliście",oni:"poszukali" },
+}
+},
+{
+niedo: "pytać",doko: "zapytać",anlam: "sormak",
+forms: {
+tr: { ja:"pytam",ty:"pytasz",on:"pyta",my:"pytamy",wy:"pytacie",oni:"pytają" },
+pnm: { jm:"pytałem",tm:"pytałeś",on:"pytał",mm:"pytaliśmy",wm:"pytaliście",oni:"pytali" },
+pdm: { jm:"zapytałem",tm:"zapytałeś",on:"zapytał",mm:"zapytaliśmy",wm:"zapytaliście",oni:"zapytali" },
+}
+},
+{
+niedo: "czytać",doko: "przeczytać",anlam: "okumak",
+forms: {
+tr: { ja:"czytam",ty:"czytasz",on:"czyta",my:"czytamy",wy:"czytacie",oni:"czytają" },
+pnm: { jm:"czytałem",tm:"czytałeś",on:"czytał",mm:"czytaliśmy",wm:"czytaliście",oni:"czytali" },
+pdm: { jm:"przeczytałem",tm:"przeczytałeś",on:"przeczytał",mm:"przeczytaliśmy",wm:"przeczytaliście",oni:"przeczytali" },
+}
+},
+{
+niedo: "pisać",doko: "napisać",anlam: "yazmak",
+forms: {
+tr: { ja:"piszę",ty:"piszesz",on:"pisze",my:"piszemy",wy:"piszecie",oni:"piszą" },
+pnm: { jm:"pisałem",tm:"pisałeś",on:"pisał",mm:"pisaliśmy",wm:"pisaliście",oni:"pisali" },
+pdm: { jm:"napisałem",tm:"napisałeś",on:"napisał",mm:"napisaliśmy",wm:"napisaliście",oni:"napisali" },
+gd: { ja:"napiszę",ty:"napiszesz",on:"napisze",my:"napiszemy",wy:"napiszecie",oni:"napiszą" },
+}
+},
+{
+niedo: "nosić",doko: "zanieść",anlam: "taşımak",
+forms: {
+tr: { ja:"noszę",ty:"nosisz",on:"nosi",my:"nosimy",wy:"nosicie",oni:"noszą" },
+pnm: { jm:"nosiłem",tm:"nosiłeś",on:"nosił",mm:"nosiliśmy",wm:"nosiliście",oni:"nosili" },
+pdm: { jm:"zaniosłem",tm:"zaniosłeś",on:"zaniósł",mm:"zanieśliśmy",wm:"zanieśliście",oni:"zanieśli" },
+gd: { ja:"zaniosę",ty:"zaniesiesz",on:"zaniesie",my:"zainiesiemy",wy:"zainiesiecie",oni:"zaniosą" },
+}
+},
+{
+niedo: "prowadzić",doko: "poprowadzić",anlam: "yönetmek / sürmek",
+forms: {
+tr: { ja:"prowadzę",ty:"prowadzisz",on:"prowadzi",my:"prowadzimy",wy:"prowadzicie",oni:"prowadzą" },
+pnm: { jm:"prowadziłem",tm:"prowadziłeś",on:"prowadził",mm:"prowadziliśmy",wm:"prowadziliście",oni:"prowadzili" },
+pdm: { jm:"poprowadziłem",tm:"poprowadziłeś",on:"poprowadził",mm:"poprowadziliśmy",wm:"poprowadziliście",oni:"poprowadzili" },
+}
+},
+{
+niedo: "płacić",doko: "zapłacić",anlam: "ödemek",
+forms: {
+tr: { ja:"płacę",ty:"płacisz",on:"płaci",my:"płacimy",wy:"płacicie",oni:"płacą" },
+pnm: { jm:"płaciłem",tm:"płaciłeś",on:"płacił",mm:"płaciliśmy",wm:"płaciliście",oni:"płacili" },
+pdm: { jm:"zapłaciłem",tm:"zapłaciłeś",on:"zapłacił",mm:"zapłaciliśmy",wm:"zapłaciliście",oni:"zapłacili" },
+}
+},
+{
+niedo: "leczyć",doko: "wyleczyć",anlam: "tedavi etmek",
+forms: {
+tr: { ja:"leczę",ty:"leczysz",on:"leczy",my:"leczymy",wy:"leczycie",oni:"leczą" },
+pnm: { jm:"leczyłem",tm:"leczyłeś",on:"leczył",mm:"leczyliśmy",wm:"leczyliście",oni:"leczyli" },
+pdm: { jm:"wyleczyłem",tm:"wyleczyłeś",on:"wyleczył",mm:"wyleczyliśmy",wm:"wyleczyliście",oni:"wyleczyli" },
+}
+},
+{
+niedo: "ćwiczyć",doko: "poćwiczyć",anlam: "egzersiz yapmak",
+forms: {
+tr: { ja:"ćwiczę",ty:"ćwiczysz",on:"ćwiczy",my:"ćwiczymy",wy:"ćwiczycie",oni:"ćwiczą" },
+pnm: { jm:"ćwiczyłem",tm:"ćwiczyłeś",on:"ćwiczył",mm:"ćwiczyliśmy",wm:"ćwiczyliście",oni:"ćwiczyli" },
+pdm: { jm:"poćwiczyłem",tm:"poćwiczyłeś",on:"poćwiczył",mm:"poćwiczyliśmy",wm:"poćwiczyliście",oni:"poćwiczyli" },
+gd: { ja:"poćwiczę",ty:"poćwiczysz",on:"poćwiczy",my:"poćwiczymy",wy:"poćwiczycie",oni:"poćwiczą" },
+}
+},
+{
+niedo: "uczyć",doko: "nauczyć",anlam: "öğretmek / öğrenmek",
+forms: {
+tr: { ja:"uczę",ty:"uczysz",on:"uczy",my:"uczymy",wy:"uczycie",oni:"uczą" },
+pnm: { jm:"uczyłem",tm:"uczyłeś",on:"uczył",mm:"uczyliśmy",wm:"uczyliście",oni:"uczyli" },
+pdm: { jm:"nauczyłem",tm:"nauczyłeś",on:"nauczył",mm:"nauczyliśmy",wm:"nauczyliście",oni:"nauczyli" },
+}
+},
+{
+niedo: "robić",doko: "zrobić",anlam: "yapmak",
+forms: {
+tr: { ja:"robię",ty:"robisz",on:"robi",my:"robimy",wy:"robicie",oni:"robią" },
+pnm: { jm:"robiłem",tm:"robiłeś",on:"robił",mm:"robiliśmy",wm:"robiliście",oni:"robili" },
+pdm: { jm:"zrobiłem",tm:"zrobiłeś",on:"zrobił",mm:"zrobiliśmy",wm:"zrobiliście",oni:"zrobili" },
+gd: { ja:"zrobię",ty:"zrobisz",on:"zrobi",my:"zrobimy",wy:"zrobicie",oni:"zrobią" },
+}
+},
+{
+niedo: "dzielić",doko: "podzielić",anlam: "bölmek / paylaşmak",
+forms: {
+tr: { ja:"dzielę",ty:"dzielisz",on:"dzieli",my:"dzielimy",wy:"dzielicie",oni:"dzielą" },
+pnm: { jm:"dzieliłem",tm:"dzieliłeś",on:"dzielił",mm:"dzieliliśmy",wm:"dzieliliście",oni:"dzielili" },
+pdm: { jm:"podzieliłem",tm:"podzieliłeś",on:"podzielił",mm:"podzieliliśmy",wm:"podzieliliście",oni:"podzielili" },
+}
+},
+{
+niedo: "słyszeć",doko: "usłyszeć",anlam: "duymak",
+forms: {
+tr: { ja:"słyszę",ty:"słyszysz",on:"słyszy",my:"słyszymy",wy:"słyszycie",oni:"słyszą" },
+pnm: { jm:"słyszałem",tm:"słyszałeś",on:"słyszał",mm:"słyszeliśmy",wm:"słyszeliście",oni:"słyszeli" },
+pdm: { jm:"usłyszałem",tm:"usłyszałeś",on:"usłyszał",mm:"usłyszeliśmy",wm:"usłyszeliście",oni:"usłyszeli" },
+}
+},
+{
+niedo: "widzieć",doko: "zobaczyć",anlam: "görmek",
+forms: {
+tr: { ja:"widzę",ty:"widzisz",on:"widzi",my:"widzimy",wy:"widzicie",oni:"widzą" },
+pnm: { jm:"widziałem",tm:"widziałeś",on:"widział",mm:"widzieliśmy",wm:"widzieliście",oni:"widzieli" },
+pdm: { jm:"zobaczyłem",tm:"zobaczyłeś",on:"zobaczył",mm:"zobaczyliśmy",wm:"zobaczyliście",oni:"zobaczyli" },
+gd: { ja:"zobaczę",ty:"zobaczysz",on:"zobaczy",my:"zobaczymy",wy:"zobaczycie",oni:"zobaczą" },
+}
+},
+{
+niedo: "rozumieć",doko: "zrozumieć",anlam: "anlamak",
+forms: {
+tr: { ja:"rozumiem",ty:"rozumiesz",on:"rozumie",my:"rozumiemy",wy:"rozumiecie",oni:"rozumieją" },
+pnm: { jm:"rozumiałem",tm:"rozumiałeś",on:"rozumiał",mm:"rozumieliśmy",wm:"rozumieliście",oni:"rozumieli" },
+pdm: { jm:"zrozumiałem",tm:"zrozumiałeś",on:"zrozumiał",mm:"zrozumieliśmy",wm:"zrozumieliście",oni:"zrozumieli" },
+gd: { ja:"zrozumiem",ty:"zrozumiesz",on:"zrozumie",my:"zrozumiemy",wy:"zrozumiecie",oni:"zrozumieją" },
+}
+},
+{
+niedo: "wiedzieć",doko: "dowiedzieć się",anlam: "bilmek / öğrenmek",
+forms: {
+tr: { ja:"wiem",ty:"wiesz",on:"wie",my:"wiemy",wy:"wiecie",oni:"wiedzą" },
+pnm: { jm:"wiedziałem",tm:"wiedziałeś",on:"wiedział",mm:"wiedzieliśmy",wm:"wiedzieliście",oni:"wiedzieli" },
+pdm: { jm:"dowiedziałem się",tm:"dowiedziałeś się",on:"dowiedział się",mm:"dowiedzieliśmy się",wm:"dowiedzieliście się",oni:"dowiedzieli się" },
+gd: { ja:"dowiem się",ty:"dowiesz się",on:"dowie się",my:"dowiemy się",wy:"dowiecie się",oni:"dowiedzą się" },
+}
+},
+{
+niedo: "myśleć",doko: "pomyśleć",anlam: "düşünmek",
+forms: {
+tr: { ja:"myślę",ty:"myślisz",on:"myśli",my:"myślimy",wy:"myślicie",oni:"myślą" },
+pnm: { jm:"myślałem",tm:"myślałeś",on:"myślał",mm:"myśleliśmy",wm:"myśleliście",oni:"myśleli" },
+pdm: { jm:"pomyślałem",tm:"pomyślałeś",on:"pomyślał",mm:"pomyśleliśmy",wm:"pomyśleliście",oni:"pomyśleli" },
+gd: { ja:"pomyślę",ty:"pomyślisz",on:"pomyśli",my:"pomyślimy",wy:"pomyślicie",oni:"pomyślą" },
+}
+},
+{
+niedo: "wstawać",doko: "wstać",anlam: "kalkmak (yataktan)",
+forms: {
+tr: { ja:"wstaję",ty:"wstajesz",on:"wstaje",my:"wstajemy",wy:"wstajecie",oni:"wstają" },
+pnm: { jm:"wstawałem",tm:"wstawałeś",on:"wstawał",mm:"wstawaliśmy",wm:"wstawaliście",oni:"wstawali" },
+pdm: { jm:"wstałem",tm:"wstałeś",on:"wstał",mm:"wstaliśmy",wm:"wstaliście",oni:"wstali" },
+gd: { ja:"wstanę",ty:"wstaniesz",on:"wstanie",my:"wstaniemy",wy:"wstaniecie",oni:"wstaną" },
+}
+},
+{
+niedo: "iść",doko: "pójść",anlam: "gitmek (yürüyerek)",
+forms: {
+tr: { ja:"idę",ty:"idziesz",on:"idzie",my:"idziemy",wy:"idziecie",oni:"idą" },
+pnm: { jm:"szedłem",tm:"szedłeś",on:"szedł",mm:"szliśmy",wm:"szliście",oni:"szli" },
+pdm: { jm:"poszedłem",tm:"poszedłeś",on:"poszedł",mm:"poszliśmy",wm:"poszliście",oni:"poszli" },
+gd: { ja:"pójdę",ty:"pójdziesz",on:"pójdzie",my:"pójdziemy",wy:"pójdziecie",oni:"pójdą" },
+}
+},
+{
+niedo: "jechać",doko: "pojechać",anlam: "gitmek (araçla,tek sefer)",
+forms: {
+tr: { ja:"jadę",ty:"jedziesz",on:"jedzie",my:"jedziemy",wy:"jedziecie",oni:"jadą" },
+pnm: { jm:"jechałem",tm:"jechałeś",on:"jechał",mm:"jechaliśmy",wm:"jechaliście",oni:"jechali" },
+pdm: { jm:"pojechałem",tm:"pojechałeś",on:"pojechał",mm:"pojechaliśmy",wm:"pojechaliście",oni:"pojechali" },
+gd: { ja:"pojadę",ty:"pojedziesz",on:"pojedzie",my:"pojedziemy",wy:"pojedziecie",oni:"pojadą" },
+}
+},
+{
+niedo: "brać",doko: "wziąć",anlam: "almak",
+forms: {
+tr: { ja:"biorę",ty:"bierzesz",on:"bierze",my:"bierzemy",wy:"bierzecie",oni:"biorą" },
+pnm: { jm:"brałem",tm:"brałeś",on:"brał",mm:"braliśmy",wm:"braliście",oni:"brali" },
+pdm: { jm:"wziąłem",tm:"wziąłeś",on:"wziął",mm:"wzięliśmy",wm:"wzięliście",oni:"wzięli" },
+gd: { ja:"wezmę",ty:"weźmiesz",on:"weźmie",my:"weźmiemy",wy:"weźmiecie",oni:"wezmą" },
+}
+},
+{
+niedo: "mówić",doko: "powiedzieć",anlam: "söylemek / konuşmak",
+forms: {
+tr: { ja:"mówię",ty:"mówisz",on:"mówi",my:"mówimy",wy:"mówicie",oni:"mówią" },
+pnm: { jm:"mówiłem",tm:"mówiłeś",on:"mówił",mm:"mówiliśmy",wm:"mówiliście",oni:"mówili" },
+pdm: { jm:"powiedziałem",tm:"powiedziałeś",on:"powiedział",mm:"powiedzieliśmy",wm:"powiedzieliście",oni:"powiedzieli" },
+gd: { ja:"powiem",ty:"powiesz",on:"powie",my:"powiemy",wy:"powiecie",oni:"powiedzą" },
+}
+},
+];
+var PERSON_LABELS={
+jm:  "ja (ben — erkek)",
+jf:  "ja (ben — kadın)",
+tm:  "ty (sen — erkek)",
+tf:  "ty (sen — kadın)",
+on:    "on (o — erkek)",
+ona:   "ona (o — kadın)",
+mm:  "my (biz — erkekler)",
+mf:  "my (biz — kadınlar/nötr)",
+wm:  "wy (siz — erkekler)",
+wf:  "wy (siz — kadınlar/nötr)",
+oni:   "oni (onlar — erkekler)",
+one:   "one (onlar — kadınlar/nötr)",
+};
+var TENSE_LABELS={
+tr: "Teraźniejszy — Şimdiki Zaman",
+pnm: "Czas Przeszły Niedokonany — Geçmiş Zaman",
+pnf: "Czas Przeszły Niedokonany — Geçmiş Zaman",
+pdm: "Czas Przeszły Dokonany — Geçmiş Zaman",
+gd: "Czas Przyszły Dokonany — Gelecek Zaman",
+gn: "Czas Przyszły Niedokonany — Gelecek Zaman",
+};
+var GENDER_NEUTRAL_PERSONS={
+ja:  { m: "jm", f: "jf"  },
+ty:  { m: "tm", f: "tf"  },
+my:  { m: "mm", f: "mf"  },
+wy:  { m: "wm", f: "wf"  },
+};
+var GN={jm:"będę",jf:"będę",tm:"będziesz",tf:"będziesz",on:"będzie",ona:"będzie",mm:"będziemy",mf:"będziemy",wm:"będziecie",wf:"będziecie",oni:"będą",one:"będą",ja:"będę",ty:"będziesz",my:"będziemy",wy:"będziecie"};
+var TOTAL=10;
+var LETTERS=["A","B","C","D"];
+var STAR_PTS="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26";
+var SVG_NS="http://www.w3.org/2000/svg";
+var TENSE_GROUPS={
+"tr":   ["tr"],
+"niedo-m": ["pnm","pnf"],
+"doko-m":  ["pdm"],
+"niedo-f": ["gn"],
+"doko-f":  ["gd"]
+};
+var enabledTenses=["tr","pnm","pnf","pdm","gn","gd"];
+function toggleCheck(id){
+var chk=document.getElementById(id);
+if (chk) chk.checked=!chk.checked;
+}
+function getEnabledTenses(){
+var result=[];
+var keys=Object.keys(TENSE_GROUPS);
+for (var i=0; i < keys.length; i++){
+var chk=document.getElementById("chk-" + keys[i]);
+if (chk && chk.checked){
+var ts=TENSE_GROUPS[keys[i]];
+for (var j=0; j < ts.length; j++) result.push(ts[j]);
+}
+}
+return result.length > 0 ? result : enabledTenses;
+}
+function saveSettings(){
+enabledTenses=getEnabledTenses();
+document.getElementById("settings-panel").className="";
+startNewRound();
+}
+document.getElementById("settings-btn").addEventListener("click",function(e){
+e.stopPropagation();
+var p=document.getElementById("settings-panel");
+p.className=p.className==="open" ? "" : "open";
+});
+document.addEventListener("click",function(e){
+var p=document.getElementById("settings-panel");
+var btn=document.getElementById("settings-btn");
+if (!p.contains(e.target) && e.target!==btn) p.className="";
+});
+function rand(arr){ return arr[Math.floor(Math.random() * arr.length)]; }
+function shuffle(arr){
+var a=arr.slice();
+for (var i=a.length-1; i > 0; i--){
+var j=Math.floor(Math.random()*(i+1));
+var t=a[i]; a[i]=a[j]; a[j]=t;
+}
+return a;
+}
+function makeTypo(word){
+var SWAPS=[
+["ę","e"],["e","ę"],["ą","a"],["a","ą"],["ó","o"],["o","ó"],
+["ś","s"],["s","ś"],["ć","c"],["c","ć"],["ź","z"],["ż","z"],
+["ń","n"],["ł","l"],["l","ł"],["ie","i"],["i","ie"],
+["em","am"],["am","em"]
+];
+var sw=shuffle(SWAPS);
+for (var i=0; i < sw.length; i++){
+if (word.indexOf(sw[i][0])!==-1){
+var mutated=word.replace(sw[i][0],sw[i][1]);
+if (mutated!==word) return mutated;
+}
+}
+if (word.length > 2){
+var endings=["e","a","i","y","ę","ą","ł"];
+for (var j=0; j < endings.length; j++){
+if (!word.endsWith(endings[j])) return word.slice(0,-1) + endings[j];
+}
+}
+return word + "e";
+}
+function generateQuestion(){
+var eligible=[];
+for (var vi=0; vi < VERBS.length; vi++){
+var vforms=VERBS[vi].forms;
+var hasTense=false;
+for (var ti=0; ti < enabledTenses.length; ti++){
+if (vforms[enabledTenses[ti]]){ hasTense=true; break; }
+}
+if (hasTense) eligible.push(VERBS[vi]);
+}
+if (eligible.length===0) eligible=VERBS.slice();
+var verb=rand(eligible);
+var availableTenses=[];
+for (var t in verb.forms){
+if (enabledTenses.indexOf(t)!==-1) availableTenses.push(t);
+}
+if (availableTenses.length===0) availableTenses=Object.keys(verb.forms);
+var tense=rand(availableTenses);
+var persons=Object.keys(verb.forms[tense]);
+var rawPerson=rand(persons);
+var person=rawPerson;
+if (GENDER_NEUTRAL_PERSONS[rawPerson]){
+var gender=Math.random() < 0.5 ? "m" : "f";
+person=GENDER_NEUTRAL_PERSONS[rawPerson][gender];
+}
+var correctAnswer=verb.forms[tense][rawPerson];
+var sameVerbForms=[];
+for (var tk in verb.forms){
+for (var pk in verb.forms[tk]){
+if (verb.forms[tk][pk]!==correctAnswer) sameVerbForms.push(verb.forms[tk][pk]);
+}
+}
+sameVerbForms=shuffle(sameVerbForms);
+var distractors=[];
+var typo=makeTypo(correctAnswer);
+if (typo!==correctAnswer) distractors.push(typo);
+for (var si=0; si < sameVerbForms.length && distractors.length < 3; si++){
+distractors.push(sameVerbForms[si]);
+}
+for (var fi=0; fi < VERBS.length && distractors.length < 3; fi++){
+if (VERBS[fi].niedo===verb.niedo) continue;
+var ft=Object.keys(VERBS[fi].forms);
+for (var fti=0; fti < ft.length && distractors.length < 3; fti++){
+var fp=Object.keys(VERBS[fi].forms[ft[fti]]);
+for (var fpi=0; fpi < fp.length && distractors.length < 3; fpi++){
+var d=VERBS[fi].forms[ft[fti]][fp[fpi]];
+if (d!==correctAnswer) distractors.push(d);
+}
+}
+}
+var options=shuffle([correctAnswer].concat(distractors.slice(0,3)));
+return { verb:verb,tense:tense,person:person,correctAnswer:correctAnswer,options:options,typoDistractor:typo };
+}
+function genQuestions(){
+var qs=[];
+for (var i=0; i < TOTAL; i++) qs.push(generateQuestion());
+return qs;
+}
+var S={
+questions:[],qIndex:0,score:0,
+answered:false,starHistory:[]
+};
+function makeStar(size,fill,stroke,glow){
+var s=document.createElementNS(SVG_NS,"svg");
+s.setAttribute("width",size); s.setAttribute("height",size);
+s.setAttribute("viewBox","0 0 24 24"); s.style.display="block";
+if(glow) s.style.filter=glow;
+var p=document.createElementNS(SVG_NS,"polygon");
+p.setAttribute("points",STAR_PTS); p.setAttribute("fill",fill);
+p.setAttribute("stroke",stroke); p.setAttribute("stroke-width","1.5");
+p.setAttribute("stroke-linejoin","round");
+s.appendChild(p); return s;
+}
+function renderHistoryStars(id,history){
+var c=document.getElementById(id);
+if(!c) return;
+c.innerHTML="";
+c.style.cssText="display:flex;gap:6px;justify-content:center;margin-top:8px;margin-bottom:4px;flex-wrap:wrap;";
+for(var i=0;i<5;i++){
+var idx=history.length-5+i;
+var pct=(idx>=0&&idx<history.length)?history[idx]:null;
+var fill="none",stroke="#3a3a52",glow="";
+if(pct!==null){
+if(pct>=80){fill="#f5c842";stroke="#f5c842";glow="drop-shadow(0 0 6px #f5c84288)";}
+else if(pct>=51){fill="#9a8040";stroke="#9a8040";}
+else{fill="#2a2a3a";stroke="#3a3a52";}
+}
+c.appendChild(makeStar(28,fill,stroke,glow));
+}
+}
+function renderSessionStars(){
+var c=document.getElementById("star-row");
+if(!c) return;
+c.innerHTML="";
+c.style.cssText="display:flex;gap:6px;justify-content:center;margin-top:8px;margin-bottom:4px;flex-wrap:wrap;";
+var hist=S.starHistory;
+for(var i=0;i<5;i++){
+var idx=hist.length-5+i;
+var pct=(idx>=0&&idx<hist.length)?hist[idx]:null;
+var fill="none",stroke="#3a3a52",glow="";
+if(pct!==null){
+if(pct>=80){fill="#f5c842";stroke="#f5c842";glow="drop-shadow(0 0 6px #f5c84288)";}
+else if(pct>=51){fill="#9a8040";stroke="#9a8040";}
+else{fill="#2a2a3a";stroke="#3a3a52";}
+}
+c.appendChild(makeStar(28,fill,stroke,glow));
+}
+}
+function loadQuestion(){
+var q=S.questions[S.qIndex];
+S.answered=false;
+document.getElementById("v-niedo").textContent=q.verb.niedo;
+document.getElementById("v-doko").textContent=q.verb.doko;
+document.getElementById("v-anlam").textContent=q.verb.anlam;
+document.getElementById("q-tense").textContent=TENSE_LABELS[q.tense]||q.tense;
+document.getElementById("q-person").textContent=PERSON_LABELS[q.person]||q.person;
+document.getElementById("q-num").textContent=S.qIndex+1;
+document.getElementById("q-score").textContent=S.score;
+document.getElementById("progress-fill").style.width=(S.qIndex/TOTAL*100)+"%";
+if(S.qIndex>0){
+document.getElementById("q-pct-wrap").style.display="";
+document.getElementById("q-pct-val").textContent=Math.round(S.score/S.qIndex*100);
+}
+var personWord=(PERSON_LABELS[q.person]||q.person).split(" ")[0];
+var promptEl=document.getElementById("q-prompt");
+promptEl.textContent=personWord + " ";
+var blank=document.createElement("span");
+blank.className="blank";
+blank.textContent="?";
+blank.id="q-blank";
+promptEl.appendChild(blank);
+var optContainer=document.getElementById("q-options");
+optContainer.innerHTML="";
+for(var i=0;i<q.options.length;i++){
+(function(opt,idx){
+var btn=document.createElement("button");
+btn.className="opt-btn";
+var letter=document.createElement("span");
+letter.className="opt-letter";
+letter.textContent=LETTERS[idx];
+btn.appendChild(letter);
+btn.appendChild(document.createTextNode(opt));
+btn.addEventListener("click",function(){ onAnswer(opt,btn); });
+optContainer.appendChild(btn);
+})(q.options[i],i);
+}
+document.getElementById("feedback-row").style.display="none";
+document.getElementById("next-btn").style.display="none";
+renderSessionStars();
+}
+function onAnswer(chosen,btn){
+if(S.answered) return;
+S.answered=true;
+var q=S.questions[S.qIndex];
+var isCorrect=chosen===q.correctAnswer;
+if(isCorrect) S.score++;
+var btns=document.getElementById("q-options").getElementsByTagName("button");
+for(var i=0;i<btns.length;i++){
+btns[i].disabled=true;
+var optText=btns[i].textContent.slice(1);
+if(optText===q.correctAnswer) btns[i].className="opt-btn correct";
+else if(btns[i]===btn && !isCorrect) btns[i].className="opt-btn wrong";
+if(q.typoDistractor && optText===q.typoDistractor && optText!==q.correctAnswer){
+var typoTag=document.createElement("span");
+typoTag.className="typo-tag";
+typoTag.textContent=" ⚠ yazım tuzağı";
+btns[i].appendChild(typoTag);
+}
+}
+var blank=document.getElementById("q-blank");
+if(blank){
+blank.textContent=q.correctAnswer;
+blank.style.color=isCorrect ? "var(--correct)" : "var(--wrong)";
+}
+var fb=document.getElementById("feedback-row");
+fb.innerHTML="";
+fb.style.display="flex";
+var icon=document.createElement("span");
+icon.className="feedback-icon";
+icon.textContent=isCorrect ? "✓" : "✗";
+var txt=document.createElement("span");
+txt.className=isCorrect ? "feedback-text correct-fb" : "feedback-text wrong-fb";
+txt.textContent=isCorrect ? "Doğru!" : "Yanlış — doğru cevap: " + q.correctAnswer;
+fb.appendChild(icon);
+fb.appendChild(txt);
+var nextBtn=document.getElementById("next-btn");
+nextBtn.style.display="block";
+nextBtn.textContent=S.qIndex+1>=TOTAL ? "Sonuçları Gör →" : "Sonraki Soru →";
+document.getElementById("q-score").textContent=S.score;
+}
+document.getElementById("next-btn").addEventListener("click",function(){
+if(S.qIndex+1 >= TOTAL){
+showResult();
+}else{
+S.qIndex++;
+loadQuestion();
+}
+});
+document.getElementById("continue-btn").addEventListener("click",function(){
+startNewRound();
+});
+function showResult(){
+var pct=Math.round(S.score/TOTAL*100);
+S.starHistory.push(pct);
+if(S.starHistory.length>5) S.starHistory.shift();
+saveHistory();
+document.getElementById("result-emoji").textContent=pct>=90?"🏆":pct>=70?"🌟":pct>=50?"💪":"📖";
+document.getElementById("result-title").textContent=pct>=90?"Mükemmel!":pct>=70?"Çok iyi!":pct>=50?"İyi iş!":"Devam et!";
+document.getElementById("result-score").textContent=S.score+" / "+TOTAL;
+document.getElementById("result-pct").textContent="%"+pct+" başarı";
+renderHistoryStars("history-stars",S.starHistory);
+document.getElementById("quiz-screen").style.display="none";
+document.getElementById("result-screen").style.display="block";
+}
+function startNewRound(){
+S.questions=genQuestions();
+S.qIndex=0; S.score=0; S.answered=false;
+document.getElementById("result-screen").style.display="none";
+document.getElementById("quiz-screen").style.display="block";
+document.getElementById("q-pct-wrap").style.display="none";
+loadQuestion();
+}
+startNewRound();</script></body></html>
