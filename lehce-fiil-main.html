@@ -740,7 +740,6 @@ function B_showResult(){
 var pct=Math.round(B_S.score/TOTAL*100);
 B_S.starHistory.push(pct);
 if(B_S.starHistory.length>5) B_S.starHistory.shift();
-saveHistory();
 document.getElementById("b-result-emoji").textContent=pct>=90?"🏆":pct>=70?"🌟":pct>=50?"💪":"📖";
 document.getElementById("b-result-title").textContent=pct>=90?"Mükemmel!":pct>=70?"Çok iyi!":pct>=50?"İyi iş!":"Devam et!";
 document.getElementById("b-result-score").textContent=B_S.score+" / "+TOTAL;
